@@ -3,46 +3,68 @@ let input = document.querySelector('input');
 let ul = document.querySelector('ul');
 let savedList = [];
 
-if (localStorage.getItem('containSavedList')) {
-	console.log('there is a saved list');
+if (localStorage.getItem('savedList')) {
+	let parseList = JSON.parse(localStorage.getItem('savedList'));
+	parseList.map(function(li) {
+		savedList.push(li);
+		displayContent(li);
+	});
 }
 
 form.addEventListener('submit', function(e) {
 	e.preventDefault();
 	if (input.value !== '') {
-		let newLi = document.createElement('li');
-		let deleteBtn = document.createElement('button');
-		deleteBtn.innerText = 'x';
-		newLi.innerText = input.value;
-		newLi.append(deleteBtn);
-		savedList.push(newLi);
+		let todoItem = { value: '', completed: false };
+		todoItem.value = input.value;
 		input.value = '';
-		displayContent(savedList);
-		localStorage.setItem('containSavedList', true);
+		savedList.push(todoItem);
+
+		displayContent(todoItem);
 		localStorage.setItem('savedList', JSON.stringify(savedList));
 	}
 });
 
 ul.addEventListener('click', function(e) {
-	if (e.target.tagName === 'LI') {
+	if (e.target.tagName === 'SPAN') {
 		e.target.classList.toggle('completed');
+		updateContent(savedList, e);
+		localStorage.setItem('savedList', JSON.stringify(savedList));
 	}
 	if (e.target.tagName === 'BUTTON') {
-		deleteContent(savedList, e);
 		e.target.parentElement.remove();
-		if (savedList.length === 0) {
-			localStorage.removeItem('containSavedList');
-		}
+		deleteContent(savedList, e);
+		localStorage.setItem('savedList', JSON.stringify(savedList));
 	}
 });
 
-function displayContent(list) {
-	for (let li of list) {
-		ul.append(li);
+function displayContent(todo) {
+	let span = document.createElement('span');
+	let newLi = document.createElement('li');
+	let removeBtn = document.createElement('button');
+	if (todo.completed === true) {
+		span.classList.add('completed');
+	}
+	span.innerText = todo.value;
+	removeBtn.innerText = 'x';
+	newLi.append(span, removeBtn);
+	ul.append(newLi);
+}
+
+function updateContent(list, e) {
+	let searchText = e.target.innerText;
+	for (let i = 0; i < list.length; i++) {
+		if (list[i].value === searchText) {
+			let opposite = !list[i].completed;
+			list[i].completed = opposite;
+		}
 	}
 }
 
 function deleteContent(list, e) {
-	let index = list.indexOf(e.target.parentElement);
-	list.splice(index, 1);
+	let searchText = e.target.previousElementSibling.innerText;
+	for (let i = 0; i < list.length; i++) {
+		if (list[i].value === searchText) {
+			list.splice(i, 1);
+		}
+	}
 }
